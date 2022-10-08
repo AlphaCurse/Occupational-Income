@@ -1,0 +1,74 @@
+---
+title: "Occupational Income"
+author: "Tyler Brown"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Import Libraries
+```{r}
+library(tidyr)
+library(dplyr)
+```
+
+## Read the Data
+```{r}
+url = 'https://raw.githubusercontent.com/AlphaCurse/Occupational-Income/main/OccupationalIncome.csv'
+df = read.csv(url)
+head(df)
+```
+
+## Tidy and Transform Data
+I will change the name of each column and eliminate the row specifying qualitity of data.
+```{r}
+colnames(df)[1] = 'Occupation'
+colnames(df)[2] = 'Workers'
+colnames(df)[3] = 'Weekly_Income'
+colnames(df)[4] = 'Male_Workers'
+colnames(df)[5] = 'Male_Weekly_Income'
+colnames(df)[6] = 'Female_Workers'
+colnames(df)[7] = 'Female_Weekly_Income'
+df = df %>%
+  filter(!row_number() %in% c(1))
+head(df)
+```
+
+I will change each column from chr to int while eliminating all commas in each column.
+```{r}
+df$Weekly_Income = as.integer(gsub(",","",df$Weekly_Income))
+df$Male_Workers = as.integer(gsub(",","",df$Male_Workers))
+df$Male_Weekly_Income = as.integer(gsub(",","",df$Male_Weekly_Income))
+df$Female_Workers = as.integer(gsub(",","",df$Female_Workers))
+df$Female_Weekly_Income = as.integer(gsub(",","",df$Female_Weekly_Income))
+head(df)
+```
+
+## Analysis comparing the median weekly incomes for 535 different occupations to identify the difference in income between males and females.
+To identify the difference in income between males and females, we can isolate the Occupation, Male_Weekly_Income and Female_Weekly_Income columns respectively. 
+```{r}
+new_df = df %>%
+  select(Occupation, Male_Weekly_Income, Female_Weekly_Income)
+head(new_df)
+```
+
+For consistency, any row with missing data will need to be removed.
+```{r}
+new_df = new_df %>%
+  filter(!is.na(Male_Weekly_Income))
+new_df = new_df %>%
+  filter(!is.na(Female_Weekly_Income))
+new_df
+```
+
+Now that the data is tidy and transformed, we can create a new column that specifies the difference between the two columns. 
+```{r}
+new_df$Difference = new_df$Male_Weekly_Income - new_df$Female_Weekly_Income
+new_df
+```
+From the Difference column, we can see the difference between weekly income from males and females. The data shows males consistently make a higher weekly income than females. Additionally, I added a percentage difference in weekly income between the two genders. We can analyze the percentage amount males get paid more than females per occupation.
+```{r}
+new_df$Total = new_df$Male_Weekly_Income + new_df$Female_Weekly_Income
+new_df$Percentage = ((new_df$Male_Weekly_Income / new_df$Female_Weekly_Income)*100)-100
+new_df
+```
+
